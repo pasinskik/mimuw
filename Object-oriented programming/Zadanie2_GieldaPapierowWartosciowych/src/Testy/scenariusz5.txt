@@ -1,0 +1,6 @@
+# mamy 8 inwestorów: 5x RANDOM, 3x SMA
+R R R R R S S S
+# 3 rodzaje akcji w obrocie wraz z cenami ostatnich transakcji
+APL:150 MSFT:30 GOOGL:200 SMSNG:500 INTL:75
+# początkowy stan portfeli (identyczny dla wszystkich inwestorów)
+20000 APL:50 MSFT:150 GOOGL:30 SMSNG:80 INTL:10

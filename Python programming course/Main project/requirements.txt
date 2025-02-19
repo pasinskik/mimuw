@@ -1,0 +1,8 @@
+pandas
+networkx
+matplotlib
+pytest
+fastapi
+uvicorn
+seaborn
+httpx
