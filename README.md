@@ -59,7 +59,7 @@ Welcome! This GitHub contains a curated collection of my university coursework a
 - Topics: NumPy, Pandas, Seaborn, scripting
 - Project: DrugBank **Data Analysis**
 
-## 📌 How to Navigate This Repo
+## How to Navigate This Repo
 
 Each project is in its own folder, with:
 - A short `README.md` describing the goal, tools used, and outcome
