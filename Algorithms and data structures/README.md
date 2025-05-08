@@ -1,54 +1,14 @@
-# Algorithms and Data Structures
+# Algorithms and Data Structures Projects
 
-This folder contains two algorithmic projects written in **C++**, developed as part of my university coursework. Each project showcases advanced problem-solving, optimization, and data structure implementation skills.
+This folder contains two C++ projects developed for university coursework. Each project highlights algorithmic thinking, dynamic programming, and advanced data structures.
 
----
+> **Note**  
+> These implementations are meant to demonstrate algorithmic clarity and code structure. They are self-contained but omit full testing infrastructure.
 
 ## Projects
 
-### 1. **Maximum Domino Tiling (Bitmask Dynamic Programming)**
+- [Maximum Domino Tiling (Bitmask DP)](Domino_tiling/README.md)  
+  Find the optimal tiling of a grid using dynamic programming and bitmasking.
 
-**Description:**  
-Given a grid with integer values in each cell, this algorithm finds the maximum possible sum achievable by placing 2x1 dominos so that each tile is covered exactly once. Only the values of covered cells are counted toward the sum.
-
-- **Key Idea:** Recursive dynamic programming with bitmasking and memoization.  
-- **Complexity:** `O(n × k × 2^k)`  
-- **Language:** C++
-
-**Features:**
-- Bitmasking for tile placement tracking
-- Recursive tiling state exploration
-- Efficient memoized DP implementation
-
-> Try it with a custom matrix input to see the optimal tiling value in action.
-
----
-
-### 2. **Augmented Splay Tree (Dynamic Sequence Management)**
-
-**Description:**  
-Implements an augmented **Splay Tree** to store a sequence of integers. Supports efficient range updates and queries on non-decreasing subsequences. Designed for an interactive "garden" simulation problem.
-
-- **Key Idea:** Splay tree with lazy propagation and subtree metadata.  
-- **Complexity:** `O(m × log n)`  
-- **Language:** C++
-
-**Supports:**
-- Range increment operations (lazy propagation)
-- Finding max non-decreasing consecutive subsequence in a given range
-- Online splaying and subtree attribute maintenance
-
-> Handles large sequences efficiently with smart tree rotations and augmentations.
-
----
-
-## How to Run
-
-Both projects read from `stdin`, so you can compile and run them as follows:
-
-```bash
-g++ -std=c++17 domino.cpp -o domino
-./domino < input.txt
-
-g++ -std=c++17 garden.cpp -o garden
-./garden < input.txt
+- [Augmented Splay Tree (Sequence Management)](Augmented_splay_tree/README.md)  
+  Maintain a dynamic sequence with fast updates and range queries using a self-adjusting tree.
