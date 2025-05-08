@@ -1,0 +1,7 @@
+### Sample Input Explanation (project_2.cpp)
+10 20 # 10 initial elements in the sequence, 20 operations
+N 1 10 5 # Fertilize (add 5) to elements from position 1 to 10
+C 1 10 # Query max non-decreasing subsequence in range 1–10
+N 3 7 2 # Fertilize (add 2) to elements 3–7
+C 1 5 # Query in range 1–5
+C 6 10 # Query in range 6–10
