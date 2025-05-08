@@ -1,11 +1,11 @@
 /**
- * "Zadanie 1"
+ * "Project 1"
  *
- * Program jest implementacją dynamicznie ładowanej biblioteki
- * obsługującej kombinacyjne układy boolowskie złożone z bramek NAND.
+ * This project implements a dynamically loaded C library
+ * for modeling boolean circuits made of NAND gates.
  *
- * autor:   Kacper Pasiński
- * data:    21/04/2024
+ * author:   Kacper Pasiński
+ * date:    21/04/2024
  */
 
  #include <stdio.h>
@@ -14,21 +14,18 @@
  #include <errno.h>
  #include <sys/types.h>
  
- /* Definiowanie struktur potrzebnych do zadania. */
+ /* Define structures needed for the task. */
  
  typedef struct nand nand_t;
  
  /**
-  * Struktura przechowująca zródło sygnału wejścia. Jeśli nic nie jest podłączone,
-  * to nand_source wskazuje na NULL, a is_bool ma wartość false.
+  * Structure storing the source of an input signal. If nothing is connected,
+  * nand_source points to NULL and is_bool is false.
   *
-  * @param   is_bool                 Zmienna określająca czy sygnał jest boolem.
-  * @param   bool_source             Wskaźnik do sygnału boolowskiego, który jest
-  *                                  podłączony do wejścia (lub NULL).
-  * @param   nand_source             Wskaźnik do bramki, która jest podłączona do
-  *                                  tego wejścia (lub NULL).
-  * @param   output_gates_position   Pozycja, na której ta bramka znajduje się
-  *                                  w tablicy wyjść bramki nand_source.
+  * @param   is_bool                 Indicates whether the signal is a boolean.
+  * @param   bool_source             Pointer to the boolean signal connected to the input (or NULL).
+  * @param   nand_source             Pointer to the gate connected to this input (or NULL).
+  * @param   output_gates_position   Position of this gate in the output array of the nand_source.
   *
   */
  
@@ -40,12 +37,10 @@
  } input_source_t;
  
  /**
-  * Struktura przechowująca informacje o bramce, do której podłączone jest wyjście danej bramki.
+  * Structure storing information about the gate connected to the output of a given gate.
   *
-  * @param   output_gate         Wskaźnik do bramki, do której jest podłączone
-  *                              wyjście danej bramki.
-  * @param   inputs_position     Pozycja, na której ta bramka znajduje się
-  *                              w tablicy wejść bramki output_gate.
+  * @param   output_gate         Pointer to the gate connected to this gate's output.
+  * @param   inputs_position     Position of this gate in the input array of output_gate.
   *
   */
  
@@ -55,20 +50,16 @@
  } output_gate_t;
  
  /**
-  * Struktura reprezentująca bramkę NAND.
+  * Structure representing a NAND gate.
   *
-  * @param   inputs_number           Liczba wejść bramki.
-  * @param   inputs                  Tablica wejść bramki.
-  * @param   output_gates_number     Liczba bramek, do których podłączone jest
-  *                                  wyjście tej bramki.
-  * @param   output_gates            Tablica bramek, do których podłączone jest
-  *                                  wyjście tej bramki.
-  * @param   visited                 Informacja, czy bramka została już odwiedzona
-  *                                  (potrzebna do późniejszej funkcji).
-  * @param   calculated              Informacja, czy bramka została już obliczona
-  *                                  i jej output oraz ścieżka krytyczna są poprawne.
-  * @param   output                  Sygnał wyjściowy bramki.
-  * @param   critical_path           Wartość scieżki krytycznej bramki.
+  * @param   inputs_number           Number of inputs to the gate.
+  * @param   inputs                  Array of gate inputs.
+  * @param   output_gates_number     Number of gates connected to this gate's output.
+  * @param   output_gates            Array of gates connected to this gate's output.
+  * @param   visited                 Flag indicating if the gate has been visited.
+  * @param   calculated              Flag indicating if the gate's output and critical path are calculated.
+  * @param   output                  Output signal of the gate.
+  * @param   critical_path           Critical path length of the gate.
   *
   */
  
@@ -83,15 +74,14 @@
      ssize_t critical_path;
  } nand_t;
  
- /* Funkcje wykonujące podstawowe operacje na bramkach NAND. */
+ /* Basic operations on NAND gates. */
  
  /**
-  * Funkcja inicjalizuje bramkę NAND o n wejściach i ustawia wartości wszystkich
-  * parametrów na 0/false/NULL.
+  * Initializes a NAND gate with n inputs and sets all parameters to 0/false/NULL.
   *
-  * @param n     Liczba wejść inicjalizowanej bramki.
+  * @param n     Number of inputs to initialize the gate with.
   *
-  * @return      Wskaźnik do zainicjowanej bramki.
+  * @return      Pointer to an initialized gate.
   *
  */
  
@@ -133,13 +123,13 @@
  }
  
  /**
-  * Funkcja odłącza wejście numer k w bramce (po jej wywołaniu na wejście
-  * nic nie jest podłączone).
+  * Disconnects the k-th input of the gate (after this call,
+  * nothing is connected to that input).
   *
-  * @param g     Wskaźnik do bramki.
-  * @param k     Numer odłączanego wejścia.
+  * @param g     Pointer to the gate.
+  * @param k     Index of the input to disconnect.
   *
-  * @return      Informacja zwrotna o (nie)powodzeniu funkcji.
+  * @return      0 on success, -1 on failure (e.g., invalid input or gate).
   *
  */
  
@@ -157,12 +147,12 @@
  }
  
  /**
-  * Funkcja odłącza wyjście numer k w bramce.
+  * Disconnects the k-th output connection of the gate.
   *
-  * @param g     Wskaźnik do bramki.
-  * @param k     Numer odłączanego wyjścia.
+  * @param g     Pointer to the gate.
+  * @param k     Index of the output connection to disconnect.
   *
-  * @return      Informacja zwrotna o (nie)powodzeniu funkcji.
+  * @return      0 on success, -1 on error (e.g., invalid index).
   *
  */
  
@@ -174,14 +164,14 @@
  
      --g->output_gates_number;
  
-     //Jeśli odłączane wyjście było jedynym, trzeba zwolnić pamięć po output_gates
+     // If there was only one output, it is necessary to free the memory.
      if (g->output_gates_number == 0) {
          free(g->output_gates);
          g->output_gates = NULL;
          return 0;
      }
  
-     //Jeśli odłączane wyjście nie było na ostatniej pozycji, trzeba poprawić indeksy
+     // If the output wasn't the last in the array, it is necessary to fix indexing.
      if (k != g->output_gates_number) {
          g->output_gates[k] = g->output_gates[g->output_gates_number];
          g->output_gates[k].output_gate
@@ -199,15 +189,12 @@
  }
  
  /**
-  * Funkcja odłącza sygnały wejściowe i wyjściowe danej bramki, a następnie
-  * zwalnia po niej pamięć (usuwa ją). Dla każdego wejścia funkcja odłącza
-  * wyjście na którym znajduje się usuwana bramka i na odwrót.
-  * Po jej wykonaniu wskaźnik staje się nullem.
+  * Disconnects all input and output connections of the gate, then frees its memory.
+  * For each input, it disconnects the gate from its source's outputs.
+  * For each output, it disconnects the gate from its destination inputs.
+  * After this function, the pointer becomes NULL.
   *
-  * @param g     Wskaźnik do bramki.
-  *
-  * @return      Informacja zwrotna o (nie)powodzeniu funkcji.
-  *
+  * @param g     Pointer to the gate to delete.
  */
  
  void nand_delete(nand_t *g) {
@@ -241,20 +228,18 @@
      free(g);
  }
  
- /* Funkcje podłączające sygnały do wejść bramki NAND. */
+ /* Functions that connects signals to inputs of a NAND gate. */
  
  /**
-  * Funkcja podłącza wyjście bramki g_out do wejścia k bramki g_in, ewentualnie
-  * odłączając od tego wejścia sygnał, który był do niego dotychczas podłączony.
-  * Podłączanie nowego wyjścia to w g_in podmiana k-tego wejścia na nowe,
-  * a w g_out powiększenie pamięci zaalokowanej na output_gates
-  * i dodanie nowego elementu do tej tablicy.
+  * Connects the output of g_out to the k-th input of g_in.
+  * If an input was already connected, it will be disconnected first.
+  * This involves modifying g_in's input array and updating g_out's output_gates array.
   *
-  * @param g_out     Wskaźnik do bramki, której wyjście podłącza się na wejście g_in.
-  * @param g_in      Wskaźnik do bramki, na której wejście podłącza się wyjście g_out.
-  * @param k         Numer wejścia, na które podłącza się wyjście g_out.
+  * @param g_out     Pointer to the output gate (source).
+  * @param g_in      Pointer to the input gate (destination).
+  * @param k         Index of the input on g_in to connect to g_out.
   *
-  * @return          Informacja zwrotna o (nie)powodzeniu funkcji.
+  * @return          0 on success, -1 on error (e.g., invalid index or NULL pointers).
   *
  */
  
@@ -288,15 +273,14 @@
  }
  
  /**
-  * Funkcja podłącza sygnał boolowski do wejścia k bramki g_in, ewentualnie
-  * odłączając od tego wejścia sygnał, który był do niego dotychczas podłączony.
-  * Podłączając castuje bool const * na bool *, świadomie usuwając const.
+  * Connects a boolean signal to the k-th input of gate g.
+  * Disconnects any previous connection. The const is deliberately cast away.
   *
-  * @param s         Wskaźnik do sygnału boolowskiego podłączanego na wejście g.
-  * @param g         Wskaźnik do bramki, na której wejście podłącza się sygnał s.
-  * @param k         Numer wejścia, na które podłącza się sygnał.
+  * @param s         Pointer to the boolean signal.
+  * @param g         Pointer to the gate whose input is being set.
+  * @param k         Index of the input to assign.
   *
-  * @return          Informacja zwrotna o (nie)powodzeniu funkcji.
+  * @return          0 on success, -1 on error.
   *
  */
  
@@ -318,16 +302,13 @@
      return 0;
  }
  
- /* Funkcje potrzebne do poprawnego wykonania nand_evaluate. */
+ /* Functions necessary to perform nand_evaluate. */
  
  /**
-  * Procedura ustawia flagi calculated na false w danej bramce oraz wszystkich
-  * jej wejściach. Jest to niezbędne, gdyż po zakończeniu funkcji nand_evaluate
-  * nie będzie gwarancji poprawności outputów czy ścieżek krytycznych tych bramek.
+  * Resets the 'calculated' flag to false for the given gate and all of its inputs recursively.
+  * This is needed after nand_evaluate, since outputs and critical paths may no longer be valid.
   *
-  * @param gate     Wskaźnik do bramki.
- 
-  *
+  * @param gate     Pointer to the gate.
  */
  
  void remove_calculated(nand_t *gate) {
@@ -345,12 +326,12 @@
  }
  
  /**
-  * Funkcja sprawdza czy w wejściach danej bramki istnieje cykl (dla pewnej
-  * bramki jej wejście zależy od wyjścia). Funkcja używa algorytmu DFS.
+  * Checks for cycles in the input graph of a gate using DFS.
+  * Returns true if a cycle is detected, otherwise false.
   *
-  * @param gate      Wskaźnik do bramki.
+  * @param gate      Pointer to the gate.
   *
-  * @return          True, jeśli cykl jest albo false, jeśli takiego nie ma.
+  * @return          true if a cycle is detected; false otherwise.
   *
  */
  
@@ -374,12 +355,12 @@
  }
  
  /**
-  * Funkcja oblicza output bramki NAND i jej ścieżkę krytyczną
-  * (chyba że ta bramka już została obliczona, czyli gate->calculated == true).
+  * Calculates the output and critical path length of the gate (unless it has already been calculated).
+  * Returns -1 on failure or the critical path length on success.
   *
-  * @param gate      Wskaźnik do bramki.
+  * @param gate      Pointer to the gate to evaluate.
   *
-  * @return          Informacja zwrotna o (nie)powodzeniu funkcji.
+  * @return          Critical path length on success; -1 on failure.
   *
  */
  
@@ -434,20 +415,15 @@
  }
  
  /**
-  * Funkcja wyznacza wartości sygnałów na wyjściach podanych bramek i oblicza
-  * długość ścieżki krytycznej. Aby zoptymalizować ten algorytm, funkcja używa
-  * flagi calculated w strukturze NAND, aby nie liczyć wartości dla tych samych
-  * bramek kilka razy. Gdy w bramkach istnieje cykl, ścieżka krytyczna nie jest
-  * możliwa do obliczenia, więc funkcja sprawdza istnienie cyklu zawczasu.
+  * Evaluates the outputs of all gates and calculates the critical path of the entire circuit.
+  * Uses memoization to avoid recalculating outputs.
+  * Returns -1 if the circuit contains a cycle or cannot be evaluated.
   *
-  * @param gate      Tablica wskaźników do bramek.
-  * @param s         Tablica sygnałów boolowskich,sygnał na i-tej pozycji
-  *                  odpowiada sygnałowi wyjściowemu i-tej bramki.
-  * @param m         Liczba bramek.
+  * @param gate      Array of pointers to NAND gates.
+  * @param s         Output array: each entry stores the output signal for the corresponding gate.
+  * @param m         Number of gates in the array.
   *
-  * @return          Ścieżka krytyczna układu bramek
-  *                  albo -1, gdy ścieżki nie da się policzyć.
-  *
+  * @return          Length of the critical path, or -1 if evaluation fails (e.g., due to cycles).
  */
  
  ssize_t nand_evaluate(nand_t **g, bool *s, size_t m) {
@@ -494,16 +470,15 @@
      return max_critical_path;
  }
  
- /* Funkcje pozwalające na iteracje po wejściach/wyjściach bramki NAND. */
+ /* Functions to iterate over inputs/outputs of a NAND gate. */
  
  /**
-  * Funkcja wyznacza liczbę wejść bramek podłączonych do wyjścia danej bramki.
+  * Returns the number of inputs of other gates connected to the output of gate g.
+  * Returns -1 if the gate pointer is NULL.
   *
-  * @param g     Wskaźnik do bramki.
+  * @param g     Pointer to the gate.
   *
-  * @return      Liczba wejść bramek podłączonych do wyjścia danej bramki
-  *              albo -1, gdy wskaźnik jest nullem.
-  *
+  * @return      Number of outputs connected to this gate, or -1 on error.
  */
  
  ssize_t nand_fan_out(nand_t const *g) {
@@ -517,15 +492,14 @@
  }
  
  /**
-  * Funkcja zwraca wskaźnik do sygnału boolowskiego lub bramki podłączonej
-  * do danego wejścia danej bramki.
+  * Returns a pointer to the boolean signal or gate connected to the k-th input of gate g.
+  * Returns NULL if no input is connected or parameters are invalid.
   *
-  * @param g     Wskaźnik do bramki.
-  * @param k     Numer wejścia, do którego jest podłączony zwracany sygnał.
+  * @param g     Pointer to the gate.
+  * @param k     Index of the input to access.
   *
-  * @return      Sygnał podłączony do wejścia k bramki g albo NULL, jeśli nic
-  *              nie jest podłączone do tego wejścia lub parametry są niepoprawne.
-  *
+  * @return      Pointer to the signal or gate connected to input k, or NULL if
+  *              none is connected or parameters are invalid.
  */
  
  void* nand_input(nand_t const *g, unsigned k) {
@@ -543,15 +517,13 @@
  }
  
  /**
-  * Funkcja zwraca wskaźnik do konkretnej w kolejności bramki, do której
-  * podłączone jest wyjście danej bramki. Pozwala to na iterowanie po output_gates.
+  * Returns a pointer to the k-th gate connected to the output of gate g.
+  * Allows iteration over the output_gates array.
   *
-  * @param g     Wskaźnik do bramki.
-  * @param k     Numer bramki w tablicy output_gates bramki g.
+  * @param g     Pointer to the gate.
+  * @param k     Index of the output gate to access.
   *
-  * @return      Wskaźnik do k-tej w kolejności bramki, do której podłączone
-  *              jest wyjście g.
-  *
+  * @return      Pointer to the output gate at position k, or NULL on error.
  */
  
  nand_t* nand_output(nand_t const *g, ssize_t k) {

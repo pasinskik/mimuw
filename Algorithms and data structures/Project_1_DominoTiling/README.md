@@ -20,7 +20,8 @@ Given an `k × n` grid (with `k` rows and `n` columns), each cell contains an in
 
 ## Input Format
 
-```n k # n = number of columns, k = number of rows  
+```c
+n k # n = number of columns, k = number of rows  
 v11 v12 ... v1n # Row 1 values  
 v21 v22 ... v2n # Row 2 values  
 ...  
@@ -28,7 +29,7 @@ vk1 vk2 ... vkn # Row k values
 ```
 ### Example
 
-```
+```c
 3 2
 1 2 3
 4 5 6
@@ -43,7 +44,7 @@ This represents a 2x3 grid:
 
 ## How to Run
 
-```
+```bash
 g++ -std=c++17 domino.cpp -o domino  
 ./domino < example_input.txt
 ```
