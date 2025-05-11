@@ -8,5 +8,8 @@ This folder contains two concurrent programming projects in Java and C.
 
 ## Projects
 
-- [Project 1 – Parallel Boolean Expression Solver (Java)](Parallel_solver/README.md)
-- [Project 2 – Work-Stealing Recursive Solver (C)](Recursive_solver/README.md)
+- [Parallel Boolean Expression Solver (Java)](Parallel_solver/README.md)  
+  Multithreaded evaluation of boolean expressions using Java threads and blocking queues.
+
+- [Work-Stealing Recursive Solver (C)](Recursive_solver/README.md)  
+  Lightweight task scheduler with work-stealing for recursive parallel computation.
