@@ -1,0 +1,6 @@
+# we have 6 investors: 4x RANDOM, 2x SMA
+R R R R S S
+# 3 types of stock with the latest prices
+APL:145 MSFT:300 GOOGL:2700
+# beginning wallet balances (the same for each investor)
+100000 APL:5 MSFT:15 GOOGL:3
