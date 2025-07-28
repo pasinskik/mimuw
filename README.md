@@ -1,6 +1,6 @@
 # University Projects Portfolio
 
-Welcome! This GitHub contains a curated collection of my university coursework and projects. I'm a Computer Science student currently in my second year, with a growing interest in machine learning, software engineering, and cybersecurity.
+Welcome! This GitHub contains a curated collection of my university coursework and projects. I'm a Computer Science student currently in my third year, with a growing interest in machine learning, software engineering, and cybersecurity.
 
 ---
 
