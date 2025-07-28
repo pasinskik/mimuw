@@ -25,7 +25,9 @@ Welcome! This GitHub contains a curated collection of my university coursework a
 - Tools: Wireshark, VirtualBox, bash
 - Language: C
 - Topics: IP addressing, routing, ARP, TCP/UDP
-- Project: Synchronizing clocks using **UDP**
+- Projects:
+  - Synchronizing clocks using **UDP**
+  - Client-server game using **TCP**
 
 ### 4. [Concurrent Programming](Concurrent_programming/README.md)
 - Languages: Java, C
@@ -39,6 +41,7 @@ Welcome! This GitHub contains a curated collection of my university coursework a
 - Topics: Regression, classification, statistical learning
 - Projects:
   - Wage Structure Analysis **Jupyter Notebook**
+  - Exploring Best Models For **Variable Prediction**
 
 ### 6. [Introductory Programming in C](Introductory_programming/README.md)
 - Language: C

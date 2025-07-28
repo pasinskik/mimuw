@@ -8,5 +8,7 @@ This folder contains solution notebooks for selected lab assignments from the In
 
 ## Projects
 
-- [Lab 1 – Wage Structure Analysis](Earnings/README.md)  
+- [Wage Structure Analysis](Earnings/README.md)  
   Data inspection, clustering, classification, and regression using scikit-learn and statsmodels.
+- [Variable Prediction](Variable_prediction/README.md)  
+  Classification and regression, emphasizing feature selection, validation, and performance tuning.

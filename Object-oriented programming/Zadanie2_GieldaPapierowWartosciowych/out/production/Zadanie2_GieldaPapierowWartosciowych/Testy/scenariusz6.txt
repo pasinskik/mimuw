@@ -1,0 +1,6 @@
+# mamy 1 inwestorów: 2x RANDOM, 2x SMA
+R R S S
+# 1 rodzaj akcji w obrocie wraz z cena ostatniej transakcji
+APL:150
+# początkowy stan portfeli (identyczny dla wszystkich inwestorów)
+1000 APL:15
