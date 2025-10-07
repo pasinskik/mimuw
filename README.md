@@ -7,27 +7,27 @@ Welcome! This GitHub contains a curated collection of my university coursework a
 ## Courses & Projects
 
 ### 1. [Algorithms and Data Structures](Algorithms_and_data_structures/README.md)
-- Language: C++
-- Topics: trees, graphs, dynamic programming, augmenting data structures
-- Projects:
-  - Finding max sum of domino tiling with **Bitmask DP**
-  - **Augmented splay tree** to store a dynamic sequence
+- **Language**: C++
+- **Topics**: trees, graphs, dynamic programming, augmenting data structures
+- **Projects**:
+  - [Finding max sum of domino tiling with **Bitmask DP**](Algorithms_and_data_structures/Domino_tiling/README.md)
+  - [**Augmented splay tree** to store a dynamic sequence](Algorithms_and_data_structures/Augmented_splay_tree/README.md)
 
 ### 2. [Computer Architecture and Operating Systems](Computer_architecture_and_operating_systems/README.md)
-- Languages: C, Assembly
-- Topics: memory, Linux administration, low-level programming 
-- Projects:
-  - **Dynamically loaded library** that handles NAND gates
-  - Division of big integers in **Assembly**
-  - **Cyclic Redundancy Code** handling in Assembly
+- **Languages**: C, Assembly
+- **Topics**: memory, Linux administration, low-level programming 
+- **Projects**:
+  - [**Dynamically loaded library** that handles NAND gates](Computer_architecture_and_operating_systems/NAND_library/README.md)
+  - [Division of big integers in **Assembly**](Computer_architecture_and_operating_systems/Multiword_div/README.md)
+  - [**Cyclic Redundancy Code** handling in Assembly](Computer_architecture_and_operating_systems/CRC_lookup/README.md)
 
 ### 3. [Computer Networks](Computer_networks/README.md)
-- Tools: Wireshark, VirtualBox, bash
-- Language: C
-- Topics: IP addressing, routing, ARP, TCP/UDP
-- Projects:
-  - Synchronizing clocks using **UDP**
-  - Client-server game using **TCP**
+- **Tools**: Wireshark, VirtualBox, bash
+- **Language**: C
+- **Topics**: IP addressing, routing, ARP, TCP/UDP
+- **Projects**:
+  - [Synchronizing clocks using **UDP**](Computer_networks/Clocks/README.md)
+  - [Client-server game using **TCP**](Computer_networks/Great_aproximator/README.md)
 
 ### 4. [Concurrent Programming](Concurrent_programming/README.md)
 - Languages: Java, C

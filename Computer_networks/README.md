@@ -7,5 +7,7 @@ This directory contains C projects developed for university coursework focused o
 
 ## Projects
 
-- [Peer-to-Peer Clock Synchronization](ClockSync/README.md)  
+- [Peer-to-Peer Clock Synchronization](Clocks/README.md)  
   A distributed system of nodes that synchronize clocks using a custom UDP protocol, dynamic peer discovery, and recursive time offset propagation.
+- [The Great Aproximator](Great_aproximator/README.md)  
+  A client-server game where players approximate a hidden polynomial in real time. Built with non-blocking I/O, line-based TCP protocol, and interactive or automatic play modes.
