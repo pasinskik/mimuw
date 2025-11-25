@@ -405,213 +405,6 @@ def validate(model, loader, device, lambda_reg, mode="joint"):
         mae_per_class,
     )
 
-# ----- MAIN TRAINING LOOP ----- #
-def main():
-    # Parse command-line arguments so we can easily run
-    # different experiments:
-    #   - different λ (lambda_reg)
-    #   - different learning rates
-    #   - CPU/GPU choice
-    #   - number of epochs / patience.
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", type=str, default="data/images",
-                        help="Directory with PNG images")
-    parser.add_argument("--csv", type=str, default="data/labels.csv",
-                        help="Path to labels.csv file")
-    parser.add_argument("--epochs", type=int, default=10,
-                        help="Maximum number of training epochs")
-    parser.add_argument("--lr", type=float, default=1e-3,
-                        help="Learning rate for Adam optimizer")
-    parser.add_argument("--lambda_reg", type=float, default=1.0,
-                        help="Weight for regression loss component")
-    parser.add_argument("--device", type=str, default="cuda",
-                        help="'cuda' or 'cpu'")
-    parser.add_argument("--patience", type=int, default=10,
-                        help="Early stopping patience in epochs")
-    parser.add_argument("--mode", type=str, choices=["cls", "reg", "joint"],
-                        default="joint",
-                        help="Training mode: 'cls' = classification only," \
-                        "'reg' = regression only, 'joint' = multitask",)
-
-    args = parser.parse_args()
-
-    # Select device: use GPU if available and requested, otherwise CPU.
-    device = torch.device(args.device if torch.cuda.is_available() else "cpu")
-
-    # Load full dataset (train + validation) from CSV + images.
-    # We will later split it into 9000 / 1000 samples.
-    # Here augmentations=True is fine: we only use this instance
-    # to access the dataframe for stratification.
-    full_ds = GSNCountingDataset(
-        root_dir=args.data_dir,
-        csv_path=args.csv,
-        augmentations=True,
-    )
-
-    # ----- Train/validation split ----- #
-    # Requirements:
-    #   - 9000 train, 1000 validation
-    #   - stratified by 135-way class_id to preserve class balance.
-    dataset_size = len(full_ds)
-    all_indices = np.arange(dataset_size)
-
-    # Compute class_id for each sample directly from the CSV row.
-    labels = []
-    for idx in all_indices:
-        row = full_ds.df.iloc[idx]
-        class_id = full_ds.compute_class_id(row)
-        labels.append(class_id)
-    labels = np.array(labels)
-
-    # 90% train / 10% validation, stratified by class_id
-    train_idx, val_idx = train_test_split(
-        all_indices,
-        test_size=0.1,
-        random_state=42,
-        stratify=labels,
-    )
-
-    # Create Subset datasets for train and validation.
-    # Note: augmentations=True only for training set.
-    train_ds = Subset(GSNCountingDataset(args.data_dir, args.csv, augmentations=True), train_idx)
-    val_ds   = Subset(GSNCountingDataset(args.data_dir, args.csv, augmentations=False), val_idx)
-
-    # Wrap datasets in DataLoaders.
-    train_loader = DataLoader(train_ds, batch_size=64, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=1000, shuffle=False)
-
-    # ----- Model, optimizer, training loop ----- #
-    model = MultiTaskNet().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-
-    # Dictionary to store training history for plotting later.
-    history = {
-        "epoch": [],
-        "train_loss": [],
-        "val_loss": [],
-        "val_acc": [],
-        "val_rmse": [],
-    }
-
-    # Early stopping variables.
-    best_val_loss = float("inf")
-    epochs_no_improve = 0
-    best_model_path = f"best_model_{args.mode}.pt"
-
-    # Training loop.
-    for epoch in range(1, args.epochs + 1):
-        train_loss = train_one_epoch(
-            model, train_loader, optimizer, device, args.lambda_reg, args.mode
-        )
-        
-        (
-            val_loss,
-            val_acc,
-            val_f1,
-            val_pair_acc,
-            val_rmse,
-            val_mae,
-            val_rmse_per_class,
-            val_mae_per_class,
-        ) = validate(model, val_loader, device, args.lambda_reg, args.mode)
-
-    # Store metrics for plots later.
-        history["epoch"].append(epoch)
-        history["train_loss"].append(train_loss)
-        history["val_loss"].append(val_loss)
-        history["val_acc"].append(val_acc)
-        history["val_rmse"].append(val_rmse)
-
-        # Print a concise summary for this epoch.
-        print(
-            f"Epoch {epoch:02d} | "
-            f"train_loss={train_loss:.4f} | "
-            f"val_loss={val_loss:.4f} | "
-            f"val_acc={val_acc:.4f} | "
-            f"val_f1={val_f1:.4f} | "
-            f"val_pair_acc={val_pair_acc:.4f} | "
-            f"val_rmse={val_rmse:.4f} | "
-            f"val_mae={val_mae:.4f}"
-        )   
-
-
-        # Early stopping based on validation loss.
-        # If val_loss improves, we:
-        #   - reset patience counter
-        #   - save the current best model weights.
-        # If it does not improve for 'patience' epochs, we stop.
-        if val_loss < best_val_loss - 1e-4:  # small delta to ignore noise
-            best_val_loss = val_loss
-            epochs_no_improve = 0
-            torch.save(model.state_dict(), best_model_path)
-        else:
-            epochs_no_improve += 1
-            if epochs_no_improve >= args.patience:
-                print(f"Early stopping triggered at epoch {epoch}")
-                break
-
-
-    # ----- Final evaluation with the best model ----- #
-    model.load_state_dict(torch.load(best_model_path))
-
-    (
-        val_loss,
-        val_acc,
-        val_f1,
-        val_pair_acc,
-        val_rmse,
-        val_mae,
-        val_rmse_per_class,
-        val_mae_per_class,
-    ) = validate(model, val_loader, device, args.lambda_reg, args.mode)
-
-    print("\n=== Final validation metrics (best model) ===")
-    print(f"val_loss      = {val_loss:.4f}")
-    print(f"val_acc       = {val_acc:.4f}")
-    print(f"val_f1        = {val_f1:.4f}")
-    print(f"val_pair_acc  = {val_pair_acc:.4f}")
-    print(f"val_rmse      = {val_rmse:.4f}")
-    print(f"val_mae       = {val_mae:.4f}")
-    print("RMSE per class [squares, circles, up, right, down, left]:")
-    print(val_rmse_per_class)
-    print("MAE per class  [squares, circles, up, right, down, left]:")
-    print(val_mae_per_class)
-
-    # ----- Plot training curves ----- #
-    # Plots are saved as PNG files in the current directory.
-    epochs = history["epoch"]
-
-    # 1) Training & validation loss.
-    plt.figure()
-    plt.plot(epochs, history["train_loss"], label="train_loss")
-    plt.plot(epochs, history["val_loss"], label="val_loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.title("Training and validation loss")
-    plt.tight_layout()
-    plt.savefig(f"loss_curves_{args.mode}.png")
-    plt.close()
-
-    # 2) Validation accuracy.
-    plt.figure()
-    plt.plot(epochs, history["val_acc"], label="val_acc")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.title("Validation accuracy over epochs")
-    plt.tight_layout()
-    plt.savefig(f"val_acc_{args.mode}.png")
-    plt.close()
-
-    # 3) Validation RMSE.
-    plt.figure()
-    plt.plot(epochs, history["val_rmse"], label="val_rmse")
-    plt.xlabel("Epoch")
-    plt.ylabel("RMSE")
-    plt.title("Validation RMSE over epochs")
-    plt.tight_layout()
-    plt.savefig(f"val_rmse_{args.mode}.png")
-    plt.close()
 
 def data_analysis():
     """
@@ -668,40 +461,292 @@ def data_analysis():
     stats.to_csv("eda_shape_stats.csv")
     print(stats)
 
-def run_three_experiments():
+def run_experiment(
+    data_dir: str = "data/images",
+    csv_path: str = "data/labels.csv",
+    epochs: int = 10,
+    lr: float = 1e-3,
+    lambda_reg: float = 1.0,
+    device_str: str = "cuda",
+    patience: int = 10,
+    mode: str = "joint",
+):
+    """
+    Core training+evaluation pipeline.
+
+    This can be called:
+      - from main() (CLI)
+      - from run_three_experiments() (multiple runs)
+    """
+
+    # Select device: use GPU if available and requested, otherwise CPU.
+    device = torch.device("cuda" if (device_str == "cuda" and torch.cuda.is_available()) else "cpu")
+
+    # Load full dataset (train + validation) from CSV + images.
+    # We will later split it into 90% / 10% samples.
+    # Use augmentations=True only to access the dataframe for stratification.
+    full_ds = GSNCountingDataset(
+        root_dir=data_dir,
+        csv_path=csv_path,
+        augmentations=True,
+    )
+
+    # ----- Train/validation split ----- #
+    # Requirements:
+    #   - 9000 train, 1000 validation
+    #   - stratified by 135-way class_id to preserve class balance.
+    dataset_size = len(full_ds)
+    all_indices = np.arange(dataset_size)
+
+    # Compute class_id for each sample directly from the CSV row.
+    labels = []
+    for idx in all_indices:
+        row = full_ds.df.iloc[idx]
+        class_id = full_ds.compute_class_id(row)
+        labels.append(class_id)
+    labels = np.array(labels)
+
+    # 90% train / 10% validation, stratified by class_id
+    train_idx, val_idx = train_test_split(
+        all_indices,
+        test_size=0.1,
+        random_state=42,
+        stratify=labels,
+    )
+
+    # Create Subset datasets for train and validation.
+    # Note: augmentations=True only for training set.
+    train_ds = Subset(GSNCountingDataset(data_dir, csv_path, augmentations=True), train_idx)
+    val_ds   = Subset(GSNCountingDataset(data_dir, csv_path, augmentations=False), val_idx)
+
+    # Wrap datasets in DataLoaders.
+    train_loader = DataLoader(train_ds, batch_size=64, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=1000, shuffle=False)
+
+    # ----- Model, optimizer, training loop ----- #
+    model = MultiTaskNet().to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    # Dictionary to store training history for plotting later.
+    history = {
+        "epoch": [],
+        "train_loss": [],
+        "val_loss": [],
+        "val_acc": [],
+        "val_rmse": [],
+    }
+
+    # Early stopping variables.
+    best_val_loss = float("inf")
+    epochs_no_improve = 0
+    best_model_path = f"best_model_{mode}.pt"
+
+    # Training loop.
+    for epoch in range(1, epochs + 1):
+        train_loss = train_one_epoch(
+            model, train_loader, optimizer, device, lambda_reg, mode
+        )
+        
+        (
+            val_loss,
+            val_acc,
+            val_f1,
+            val_pair_acc,
+            val_rmse,
+            val_mae,
+            val_rmse_per_class,
+            val_mae_per_class,
+        ) = validate(model, val_loader, device, lambda_reg, mode)
+
+    # Store metrics for plots later.
+        history["epoch"].append(epoch)
+        history["train_loss"].append(train_loss)
+        history["val_loss"].append(val_loss)
+        history["val_acc"].append(val_acc)
+        history["val_rmse"].append(val_rmse)
+
+        # Print a concise summary for this epoch.
+        print(
+            f"Epoch {epoch:02d} | "
+            f"train_loss={train_loss:.4f} | "
+            f"val_loss={val_loss:.4f} | "
+            f"val_acc={val_acc:.4f} | "
+            f"val_f1={val_f1:.4f} | "
+            f"val_pair_acc={val_pair_acc:.4f} | "
+            f"val_rmse={val_rmse:.4f} | "
+            f"val_mae={val_mae:.4f}"
+        )   
+
+
+        # Early stopping based on validation loss.
+        # If val_loss improves, we:
+        #   - reset patience counter
+        #   - save the current best model weights.
+        # If it does not improve for 'patience' epochs, we stop.
+        if val_loss < best_val_loss - 1e-4:  # small delta to ignore noise
+            best_val_loss = val_loss
+            epochs_no_improve = 0
+            torch.save(model.state_dict(), best_model_path)
+        else:
+            epochs_no_improve += 1
+            if epochs_no_improve >= patience:
+                print(f"Early stopping triggered at epoch {epoch}")
+                break
+
+
+    # ----- Final evaluation with the best model ----- #
+    model.load_state_dict(torch.load(best_model_path))
+
+    (
+        val_loss,
+        val_acc,
+        val_f1,
+        val_pair_acc,
+        val_rmse,
+        val_mae,
+        val_rmse_per_class,
+        val_mae_per_class,
+    ) = validate(model, val_loader, device, lambda_reg, mode)
+
+    print("\n=== Final validation metrics (best model) ===")
+    print(f"val_loss      = {val_loss:.4f}")
+    print(f"val_acc       = {val_acc:.4f}")
+    print(f"val_f1        = {val_f1:.4f}")
+    print(f"val_pair_acc  = {val_pair_acc:.4f}")
+    print(f"val_rmse      = {val_rmse:.4f}")
+    print(f"val_mae       = {val_mae:.4f}")
+    print("RMSE per class [squares, circles, up, right, down, left]:")
+    print(val_rmse_per_class)
+    print("MAE per class  [squares, circles, up, right, down, left]:")
+    print(val_mae_per_class)
+
+    # ----- Plot training curves ----- #
+    # Plots are saved as PNG files in the current directory.
+    epochs = history["epoch"]
+
+    # 1) Training & validation loss.
+    plt.figure()
+    plt.plot(epochs, history["train_loss"], label="train_loss")
+    plt.plot(epochs, history["val_loss"], label="val_loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.title("Training and validation loss")
+    plt.tight_layout()
+    plt.savefig(f"loss_curves_{mode}.png")
+    plt.close()
+
+    # 2) Validation accuracy.
+    plt.figure()
+    plt.plot(epochs, history["val_acc"], label="val_acc")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Validation accuracy over epochs")
+    plt.tight_layout()
+    plt.savefig(f"val_acc_{mode}.png")
+    plt.close()
+
+    # 3) Validation RMSE.
+    plt.figure()
+    plt.plot(epochs, history["val_rmse"], label="val_rmse")
+    plt.xlabel("Epoch")
+    plt.ylabel("RMSE")
+    plt.title("Validation RMSE over epochs")
+    plt.tight_layout()
+    plt.savefig(f"val_rmse_{mode}.png")
+    plt.close()
+
+
+def run_three_experiments(base_args=None):
     """
     Helper function for the purpose of grading.
     Run three experiment configurations:
       1) Classification-only
       2) Joint multitask
       3) Regression-only
+
+    If base_args is provided (Namespace from argparse), take shared
+    hyperparameters (data_dir, csv, epochs, lr, device, patience) from it.
     """
+    if base_args is None:
+        # default values if called from Python, not CLI
+        class Dummy:
+            data_dir = "data/images"
+            csv = "data/labels.csv"
+            epochs = 10
+            lr = 1e-3
+            device = "cuda"
+            patience = 10
+        base_args = Dummy()
 
     configs = [
-        {
-            "mode": "cls",
-            "lambda_reg": 0.0,
-            "run_name": "cls",
-        },
-        {
-            "mode": "joint",
-            "lambda_reg": 1.0,
-            "run_name": "joint_lambda1",
-        },
-        {
-            "mode": "reg",
-            "lambda_reg": 1.0,
-            "run_name": "reg",
-        },
+        {"mode": "cls",   "lambda_reg": 0.0},
+        {"mode": "joint", "lambda_reg": 1.0},
+        {"mode": "reg",   "lambda_reg": 1.0},
     ]
 
     for cfg in configs:
-        main(
+        print(f"\n========== Running experiment: {cfg['mode']} ==========")
+        run_experiment(
+            data_dir=base_args.data_dir,
+            csv_path=base_args.csv,
+            epochs=base_args.epochs,
+            lr=base_args.lr,
             lambda_reg=cfg["lambda_reg"],
+            device_str=base_args.device,
+            patience=base_args.patience,
             mode=cfg["mode"],
-            run_name=cfg["run_name"],
+        )
+
+# ----- MAIN TRAINING LOOP ----- #
+def main():
+    # Parse command-line arguments so we can easily run
+    # different experiments:
+    #   - different λ (lambda_reg)
+    #   - different learning rates
+    #   - CPU/GPU choice
+    #   - number of epochs / patience.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir", type=str, default="data/images",
+                        help="Directory with PNG images")
+    parser.add_argument("--csv", type=str, default="data/labels.csv",
+                        help="Path to labels.csv file")
+    parser.add_argument("--epochs", type=int, default=10,
+                        help="Maximum number of training epochs")
+    parser.add_argument("--lr", type=float, default=1e-3,
+                        help="Learning rate for Adam optimizer")
+    parser.add_argument("--lambda_reg", type=float, default=1.0,
+                        help="Weight for regression loss component")
+    parser.add_argument("--device", type=str, default="cuda",
+                        help="'cuda' or 'cpu'")
+    parser.add_argument("--patience", type=int, default=10,
+                        help="Early stopping patience in epochs")
+    parser.add_argument("--mode", type=str, choices=["cls", "reg", "joint"],
+                        default="joint",
+                        help="Training mode: 'cls' = classification only, "
+                             "'reg' = regression only, 'joint' = multitask")
+    parser.add_argument("--run_all", action="store_true",
+                        help="If set, run all three configurations (cls/joint/reg)")
+
+    args = parser.parse_args()
+
+    if args.run_all:
+        # use args as base config
+        run_three_experiments(args)
+    else:
+        # single run
+        run_experiment(
+            data_dir=args.data_dir,
+            csv_path=args.csv,
+            epochs=args.epochs,
+            lr=args.lr,
+            lambda_reg=args.lambda_reg,
+            device_str=args.device,
+            patience=args.patience,
+            mode=args.mode,
         )
 
 if __name__ == "__main__":
-    # data_analysis()
     main()
+    # Optional: perform data analysis and save plots/CSV.
+    # data_analysis()
