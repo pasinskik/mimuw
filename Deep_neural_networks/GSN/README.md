@@ -84,5 +84,5 @@ Each experiment saves its own model and plots with corresponding name suffixes.
 
 ## 4. Google Colab
 
-[![Open In Colab](https://colab.research.google.com/github/pasinskik/mimuw/blob/main/Deep_neural_networks/GSN/notebooks/gsn_multitask_colab.ipynb)]
+[Open In Colab](https://colab.research.google.com/github/pasinskik/mimuw/blob/main/Deep_neural_networks/GSN/notebooks/gsn_multitask_colab.ipynb)
 
